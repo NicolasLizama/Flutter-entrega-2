@@ -29,12 +29,12 @@ venv\Scripts\activate  # En Windows
 # o en Linux/Mac:
 # source venv/bin/activate
 ```
-<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/1.PNG" width="600" alt="Activar entorno virtual"> </p>
+<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/1.PNG" width="600"> </p>
 
 ```bash
 pip install -r requirements.txt
 ```
-<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/2.PNG" width="1000" alt="Activar entorno virtual"> </p>
+<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/2.PNG" width="1000"> </p>
 
 Ejecución del servidor Flask
 
@@ -56,11 +56,24 @@ El servidor Flask se iniciará en:
 http://127.0.0.1:5000
 ```
 No cierres esta ventana.
-<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/3.PNG" width="600" alt="Activar entorno virtual"> </p>
+<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/3.PNG" width="600"> </p>
 
 
 ### Exposición pública con Ngrok
-2. Abrir una segunda ventana CMD
+
+Ngrok se utiliza para exponer el servidor Flask a internet y permitir que la aplicación Flutter se conecte desde cualquier lugar.
+
+⚠️ Importante:
+Para usar Ngrok debes crear una cuenta gratuita en https://ngrok.com/
+Una vez creada, descarga e instala Ngrok, y copia tu authtoken (clave de autenticación personal) desde tu panel de usuario.
+Luego ejecútalo una sola vez con:
+```bash
+ngrok config add-authtoken TU_AUTHTOKEN_AQUI
+```
+Esto guardará tu token en la configuración local y podrás usar Ngrok sin restricciones.
+
+## Abrir una segunda ventana CMD
+
 Navega hasta la carpeta del servidor y ejecuta:
 ```bash
 ngrok http 5000
@@ -69,16 +82,14 @@ Ngrok generará una URL pública como:
 ```bash
 https://abcd1234.ngrok-free.app
 ```
+<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/4.PNG" width="600"> </p>
+
 Copia esa dirección y reemplázala en el archivo:
+
 app-flutter/lib/services/api_service.dart
 ```bash
 static const String baseUrl = 'https://abcd1234.ngrok-free.app';
 ```
-Cada vez que reinicies Ngrok, la URL cambiará.
-Debes actualizarla en el código antes de ejecutar Flutter.
-<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/4.PNG" width="600" alt="Activar entorno virtual"> </p>
-
-
 ## Aplicación Flutter
 
 #### Ejecución
