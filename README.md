@@ -5,7 +5,8 @@
 ```
 denuncias-duoc/
 ├── server-flask/ → Backend Flask + SQLite + Ngrok
-└── app-flutter/ → Aplicación Flutter conectada al backend
+└── app-flutter/ → Aplicación Flutter conectada al backend![Imagen de WhatsApp 2025-11-12 a las 13 42 31_f42fb035](https://github.com/user-attachments/assets/38b5ffca-8689-4b89-b168-18e1419e49b1)
+
 ```
 
 ## Objetivo general
