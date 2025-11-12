@@ -28,33 +28,52 @@ python -m venv venv
 venv\Scripts\activate  # En Windows
 # o en Linux/Mac:
 # source venv/bin/activate
-
 pip install -r requirements.txt
-python app.py
 ```
 
-El servidor se iniciará en:
+
+Ejecución del servidor Flask
+
+⚠️ IMPORTANTE:
+
+Puedes crear el entorno virtual (python -m venv venv) y hacer la instalación de dependencias desde Visual Studio Code o cualquier editor.
+PERO cuando vayas a ejecutar el servidor (python app.py) y Ngrok, debes hacerlo en ventanas CMD separadas, fuera de VS Code, ya que ambos procesos deben correr al mismo tiempo.
+
+
+
+1. Abrir una primera ventana CMD
+Navega hasta la carpeta del servidor y ejecuta:
+
+```bash
+python app.py
+```
+El servidor Flask se iniciará en:
+```bash
 http://127.0.0.1:5000
+```
+No cierres esta ventana.
+
+
 
 ### Exposición pública con Ngrok
-
-Para permitir la conexión desde Flutter:
-
+2. Abrir una segunda ventana CMD
+Navega hasta la carpeta del servidor y ejecuta:
 ```bash
 ngrok http 5000
 ```
-
-Copia la URL generada (por ejemplo):
+Ngrok generará una URL pública como:
+```bash
 https://abcd1234.ngrok-free.app
-
-Y reemplázala en el archivo:
-`app-flutter/lib/services/api_service.dart`
-
-```dart
+```
+Copia esa dirección y reemplázala en el archivo:
+app-flutter/lib/services/api_service.dart
+```bash
 static const String baseUrl = 'https://abcd1234.ngrok-free.app';
 ```
---------------------------------------------------------------------
-### Aplicación Flutter
+Cada vez que reinicies Ngrok, la URL cambiará.
+Debes actualizarla en el código antes de ejecutar Flutter.
+
+## Aplicación Flutter
 
 #### Ejecución
 
