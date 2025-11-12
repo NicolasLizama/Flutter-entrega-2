@@ -28,9 +28,13 @@ python -m venv venv
 venv\Scripts\activate  # En Windows
 # o en Linux/Mac:
 # source venv/bin/activate
+```
+<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/1.PNG" width="600" alt="Activar entorno virtual"> </p>
+
+```bash
 pip install -r requirements.txt
 ```
-
+<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/2.PNG" width="1000" alt="Activar entorno virtual"> </p>
 
 Ejecución del servidor Flask
 
@@ -52,7 +56,7 @@ El servidor Flask se iniciará en:
 http://127.0.0.1:5000
 ```
 No cierres esta ventana.
-
+<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/3.PNG" width="600" alt="Activar entorno virtual"> </p>
 
 
 ### Exposición pública con Ngrok
@@ -72,6 +76,8 @@ static const String baseUrl = 'https://abcd1234.ngrok-free.app';
 ```
 Cada vez que reinicies Ngrok, la URL cambiará.
 Debes actualizarla en el código antes de ejecutar Flutter.
+<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/4.PNG" width="600" alt="Activar entorno virtual"> </p>
+
 
 ## Aplicación Flutter
 
