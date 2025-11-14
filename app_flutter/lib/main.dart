@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
       GlobalKey<ListadoScreenState>();
 
   // ==============================
-  // 🔹 Control de pestañas / navegación
+  // 🔹 Control de pestañas / navegación si eso
   // ==============================
   void _onItemTapped(int index) async {
     if (index == 1) {
