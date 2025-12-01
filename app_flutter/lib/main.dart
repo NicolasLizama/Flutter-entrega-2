@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/listado_screen.dart';
 import 'screens/nueva_denuncia_screen.dart';
+import 'screens/crear_user.dart';
+import 'screens/login.dart';
 
 void main() {
   runApp(const DenunciasApp());
@@ -33,16 +35,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  // ✅ Clave para controlar la recarga del ListadoScreen
+  // Clave para refrescar el listado
   final GlobalKey<ListadoScreenState> _listadoKey =
       GlobalKey<ListadoScreenState>();
 
-  // ==============================
-  // 🔹 Control de pestañas / navegación si eso
-  // ==============================
+  // Control de navegación
   void _onItemTapped(int index) async {
     if (index == 1) {
-      // Abre pantalla de nueva denuncia con animación
+      // Nueva denuncia
       final result = await Navigator.push(
         context,
         PageRouteBuilder(
@@ -52,18 +52,30 @@ class _HomePageState extends State<HomePage> {
         ),
       );
 
-      // Si la denuncia fue enviada, recargar listado
       if (result == true && _listadoKey.currentState != null) {
         _listadoKey.currentState!.recargarDenuncias();
       }
+
+    } else if (index == 2) {
+      // Crear usuario
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const CrearUserScreen()),
+      );
+
+    } else if (index == 3) {
+      // Login
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+
     } else {
+      // Listado
       setState(() => _selectedIndex = index);
     }
   }
 
-  // ==============================
-  // 🧱 Construcción UI principal
-  // ==============================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,7 +89,7 @@ class _HomePageState extends State<HomePage> {
         index: _selectedIndex,
         children: [
           ListadoScreen(key: _listadoKey),
-          const SizedBox(), // “Nueva” no tiene vista directa, se abre con Navigator
+          const SizedBox(), // nada; otras pantallas usan Navigator
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -90,9 +102,28 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.add),
             label: 'Nueva',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_add),
+            label: 'Crear',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.login),
+            label: 'Login',
+          ),
         ],
+
         currentIndex: _selectedIndex,
+
+        // ✔ Mostrar labels siempre
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+
+        // ✔ Iconos naranjos
         selectedItemColor: Colors.deepOrange,
+        selectedIconTheme: IconThemeData(color: Colors.deepOrange),
+        unselectedItemColor: Colors.deepOrangeAccent,
+        unselectedIconTheme: IconThemeData(color: Colors.deepOrangeAccent),
+
         onTap: _onItemTapped,
       ),
     );

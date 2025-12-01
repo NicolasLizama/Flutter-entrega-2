@@ -4,12 +4,11 @@ import 'package:http/http.dart' as http;
 import '../models/denuncia.dart';
 
 class ApiService {
-  // 🌐 URL base (sin /api al final)
   static const String baseUrl =
-      'https://compossible-stephane-pesteringly.ngrok-free.dev';
+      'https://implicit-neta-rostrally.ngrok-free.dev';
 
   // ===========================
-  // 📤 CREAR NUEVA DENUNCIA
+  // 📤 CREAR DENUNCIA
   // ===========================
   static Future<bool> crearDenuncia(
     String correo,
@@ -18,11 +17,9 @@ class ApiService {
     File imagen,
   ) async {
     try {
-      // 🖼️ Convertir imagen a Base64
       final bytes = await imagen.readAsBytes();
       final img64 = base64Encode(bytes);
 
-      // 📦 Crear JSON a enviar
       final body = jsonEncode({
         "correo": correo,
         "descripcion": descripcion,
@@ -30,21 +27,14 @@ class ApiService {
         "foto": img64,
       });
 
-      // 🚀 Enviar solicitud POST
       final res = await http.post(
         Uri.parse('$baseUrl/api/denuncias'),
         headers: {"Content-Type": "application/json"},
         body: body,
       );
 
-      print('📡 [POST] ${res.statusCode}: ${res.body}');
-      if (res.statusCode == 201) {
-        print('✅ Denuncia enviada con éxito');
-        return true;
-      } else {
-        print('⚠️ Error al enviar denuncia: ${res.body}');
-        return false;
-      }
+      print('📡 [POST DENUNCIA] ${res.statusCode}: ${res.body}');
+      return res.statusCode == 201;
     } catch (e) {
       print('❌ Error en crearDenuncia: $e');
       return false;
@@ -52,7 +42,7 @@ class ApiService {
   }
 
   // ===========================
-  // 📋 OBTENER TODAS LAS DENUNCIAS
+  // 📋 LISTAR DENUNCIAS
   // ===========================
   static Future<List<Denuncia>> getDenuncias() async {
     try {
@@ -68,6 +58,61 @@ class ApiService {
     } catch (e) {
       print('❌ Error en getDenuncias: $e');
       return [];
+    }
+  }
+
+  // ===========================
+  // 👤 CREAR USUARIO (CORRECTO)
+  // ===========================
+  static Future<bool> crearUsuario(
+    String correo,
+    String password,
+  ) async {
+    try {
+      final body = jsonEncode({
+        "correo": correo,
+        "password": password,
+      });
+
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/crear_user'),
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
+
+      print("📡 [POST CREAR USER] ${res.statusCode}: ${res.body}");
+      return res.statusCode == 201;
+    } catch (e) {
+      print("❌ Error en crearUsuario: $e");
+      return false;
+    }
+  }
+
+  // ===========================
+  // 🔐 LOGIN USUARIO (CORRECTO)
+  // ===========================
+  static Future<bool> loginUsuario(
+    String correo,
+    String password,
+  ) async {
+    try {
+      final body = jsonEncode({
+        "correo": correo,
+        "password": password,
+      });
+
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/login_user'),
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
+
+      print("📡 [POST LOGIN USER] ${res.statusCode}: ${res.body}");
+
+      return res.statusCode == 200;
+    } catch (e) {
+      print("❌ Error en loginUsuario: $e");
+      return false;
     }
   }
 }

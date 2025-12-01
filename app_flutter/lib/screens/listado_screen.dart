@@ -36,7 +36,7 @@ class ListadoScreenState extends State<ListadoScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Listado de Denuncias"),
+        title: const Text("Listado de Denuncias ."),
         backgroundColor: Colors.deepOrange,
         foregroundColor: Colors.white,
         elevation: 3,
@@ -57,7 +57,7 @@ class ListadoScreenState extends State<ListadoScreen> {
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
               child: Text(
-                "No hay denuncias registradas",
+                "No hay denuncias registradas, haz una",
                 style: TextStyle(fontSize: 16),
               ),
             );
