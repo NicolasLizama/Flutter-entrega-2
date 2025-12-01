@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:screen_protector/screen_protector.dart';
 import 'screens/listado_screen.dart';
 import 'screens/nueva_denuncia_screen.dart';
 import 'screens/crear_user.dart';
 import 'screens/login.dart';
 
-void main() {
+import 'package:flutter/foundation.dart'; // esto para que pueda seguir ejecutando DEV: lizama
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Evitar usar ScreenProtector en Web
+  if (!kIsWeb) {
+    await ScreenProtector.preventScreenshotOn();
+  }
+
   runApp(const DenunciasApp());
 }
 
