@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from werkzeug.security import generate_password_hash, check_password_hash 
 import os
 import base64
 import uuid
@@ -17,7 +19,24 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///denuncias.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
+# =============================
+# CONFIGURACIÓN JWT
+# =============================
+app.config["JWT_SECRET_KEY"] = "carlos"  # CAMBIA ESTO EN PRODUCCIÓN
+jwt = JWTManager(app) #esto enciende el jwt manager
+
 db = SQLAlchemy(app)
+
+# =============================
+# Modelo usuario
+# =============================
+class Usuario(db.Model):
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    correo = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+
+    def to_dict(self):
+        return {"id": self.id, "correo": self.correo}
 
 # =============================
 # MODELO DE DENUNCIA
@@ -50,10 +69,69 @@ with app.app_context():
 # ENDPOINTS
 # =============================
 
-# 📩 Crear denuncia (con imagen Base64)
+# Crear usuario
+@app.route('/api/crear_user', methods=['POST'])
+def crear_usuario():
+    data = request.get_json()
+
+    correo = (data.get("correo") or "").strip()
+    password = (data.get("password") or "").strip()
+
+    if not correo or not password:
+        return jsonify({"error": "correo y password son obligatorios"}), 400
+
+    if Usuario.query.filter_by(correo=correo).first():
+        return jsonify({"error": "El correo ya está registrado"}), 400
+
+    hashed_pass = generate_password_hash(password)
+
+    nuevo = Usuario(correo=correo, password=hashed_pass)
+    db.session.add(nuevo)
+    db.session.commit()
+
+    return jsonify({"mensaje": "Usuario creado con éxito"}), 201
+
+# Login usuario
+@app.route('/api/login_user', methods=['POST'])
+def login():
+    data = request.get_json()
+
+    correo = data.get("correo")
+    password = data.get("password")
+
+    if not correo or not password:
+        return jsonify({"error": "Correo y contraseña son obligatorios"}), 400
+
+    usuario = Usuario.query.filter_by(correo=correo).first()
+
+    if not usuario:
+        return jsonify({"error": "Credenciales inválidas"}), 401
+
+    if not check_password_hash(usuario.password, password):
+        return jsonify({"error": "Credenciales inválidas"}), 401
+
+    access_token = create_access_token(identity=usuario.id)
+
+    return jsonify({
+        "msg": "Login exitoso",
+        "token": access_token,
+        "usuario": usuario.to_dict()
+    }), 200
+
+# Listar usuarios (solo personas autenticadas)
+@app.route('/api/listar_users', methods=['GET'])
+@jwt_required()
+def listar_usuarios():
+    # Obtener el ID del usuario autenticado (si quieres usarlo)
+    usuario_id = get_jwt_identity()
+
+    usuarios = Usuario.query.all()
+    return jsonify([u.to_dict() for u in usuarios]), 200
+
+# Crear denuncia
 @app.route('/api/denuncias', methods=['POST'])
 def crear_denuncia():
-    # 👇 Estas líneas de depuración DEBEN estar indentadas dentro de la función
+
     print("👉 Headers:", request.headers)
     print("👉 Content-Type:", request.content_type)
     print("👉 Body:", request.data[:200])
@@ -70,20 +148,17 @@ def crear_denuncia():
     if not correo or not descripcion or not foto_b64:
         return jsonify({"error": "correo, descripcion y foto son obligatorios"}), 400
 
-    # Intentar decodificar la imagen Base64
     try:
         raw = base64.b64decode(foto_b64, validate=True)
     except Exception:
         return jsonify({"error": "Formato Base64 inválido"}), 400
 
-    # Guardar la imagen
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     nombre_foto = f"{uuid.uuid4().hex}.jpg"
     ruta_foto = os.path.join(app.config['UPLOAD_FOLDER'], nombre_foto)
     with open(ruta_foto, "wb") as f:
         f.write(raw)
 
-    # Crear registro en la base de datos
     denuncia = Denuncia(
         correo=correo,
         descripcion=descripcion,
@@ -95,34 +170,30 @@ def crear_denuncia():
 
     return jsonify(denuncia.to_dict()), 201
 
-
-# 📋 Listar todas las denuncias
+# Listar denuncias
 @app.route('/api/denuncias', methods=['GET'])
 def listar_denuncias():
     denuncias = Denuncia.query.order_by(Denuncia.id.desc()).all()
     return jsonify([d.to_dict() for d in denuncias])
 
-
-# 🔍 Ver una denuncia por ID
+# Detalle denuncia
 @app.route('/api/denuncias/<int:id>', methods=['GET'])
 def detalle_denuncia(id):
     denuncia = Denuncia.query.get_or_404(id)
     return jsonify(denuncia.to_dict())
 
-
-# 🖼️ Servir imágenes subidas
+# Servir imágenes
 @app.route('/uploads/<filename>')
 def get_image(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# ❌ Eliminar una denuncia específica
+# Eliminar denuncia
 @app.route('/api/denuncias/<int:id>', methods=['DELETE'])
 def borrar_denuncia(id):
     denuncia = Denuncia.query.get(id)
     if not denuncia:
         return jsonify({"error": "Denuncia no encontrada"}), 404
 
-    # Borrar imagen asociada si existe
     if denuncia.foto:
         ruta_foto = os.path.join(app.config['UPLOAD_FOLDER'], denuncia.foto)
         if os.path.exists(ruta_foto):
@@ -131,7 +202,6 @@ def borrar_denuncia(id):
     db.session.delete(denuncia)
     db.session.commit()
     return jsonify({"mensaje": f"Denuncia {id} eliminada correctamente"}), 200
-
 
 # =============================
 # MAIN
