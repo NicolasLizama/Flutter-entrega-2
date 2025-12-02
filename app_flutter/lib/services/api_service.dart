@@ -1,14 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/denuncia.dart';
 
 class ApiService {
+  // 🌐 URL base de tu API Flask
   static const String baseUrl =
       'https://implicit-neta-rostrally.ngrok-free.dev';
 
+  // 🔐 Storage seguro para JWT
+  static final _storage = FlutterSecureStorage();
+
   // ===========================
-  // 📤 CREAR DENUNCIA
+  // 📤 CREAR DENUNCIA (PROTEGIDO)
   // ===========================
   static Future<bool> crearDenuncia(
     String correo,
@@ -19,6 +24,9 @@ class ApiService {
     try {
       final bytes = await imagen.readAsBytes();
       final img64 = base64Encode(bytes);
+      final token = await _storage.read(key: 'jwt');
+
+      if (token == null) return false;
 
       final body = jsonEncode({
         "correo": correo,
@@ -29,7 +37,10 @@ class ApiService {
 
       final res = await http.post(
         Uri.parse('$baseUrl/api/denuncias'),
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: body,
       );
 
@@ -42,11 +53,17 @@ class ApiService {
   }
 
   // ===========================
-  // 📋 LISTAR DENUNCIAS
+  // 📋 LISTAR DENUNCIAS (PROTEGIDO)
   // ===========================
   static Future<List<Denuncia>> getDenuncias() async {
     try {
-      final res = await http.get(Uri.parse('$baseUrl/api/denuncias'));
+      final token = await _storage.read(key: 'jwt');
+      if (token == null) return [];
+
+      final res = await http.get(
+        Uri.parse('$baseUrl/api/denuncias'),
+        headers: {"Authorization": "Bearer $token"},
+      );
 
       if (res.statusCode == 200) {
         final List data = jsonDecode(res.body);
@@ -62,7 +79,7 @@ class ApiService {
   }
 
   // ===========================
-  // 👤 CREAR USUARIO (CORRECTO)
+  // 👤 CREAR USUARIO
   // ===========================
   static Future<bool> crearUsuario(
     String correo,
@@ -89,7 +106,7 @@ class ApiService {
   }
 
   // ===========================
-  // 🔐 LOGIN USUARIO (CORRECTO)
+  // 🔐 LOGIN USUARIO (GUARDA JWT)
   // ===========================
   static Future<bool> loginUsuario(
     String correo,
@@ -109,10 +126,33 @@ class ApiService {
 
       print("📡 [POST LOGIN USER] ${res.statusCode}: ${res.body}");
 
-      return res.statusCode == 200;
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final token = data['token'];
+        if (token != null) {
+          await _storage.write(key: 'jwt', value: token);
+          return true;
+        }
+      }
+
+      return false;
     } catch (e) {
       print("❌ Error en loginUsuario: $e");
       return false;
     }
+  }
+
+  // ===========================
+  // 🗑 LOGOUT USUARIO (BORRA JWT)
+  // ===========================
+  static Future<void> logout() async {
+    await _storage.delete(key: 'jwt');
+  }
+
+  // ===========================
+  // 🔑 OBTENER JWT
+  // ===========================
+  static Future<String?> getToken() async {
+    return await _storage.read(key: 'jwt');
   }
 }

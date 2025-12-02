@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final VoidCallback onLoginSuccess;
+
+  const LoginScreen({super.key, required this.onLoginSuccess});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -10,36 +13,86 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController correoController = TextEditingController();
   final TextEditingController passController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _loading = false;
+
+  void _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _loading = true);
+
+    final success = await ApiService.loginUsuario(
+      correoController.text,
+      passController.text,
+    );
+
+    setState(() => _loading = false);
+
+    if (success) {
+      widget.onLoginSuccess(); // Cambia al ListadoScreen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login exitoso")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Credenciales inválidas")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Iniciar Sesión")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: _formKey,
         child: Column(
           children: [
-            TextField(
+            TextFormField(
               controller: correoController,
               decoration: const InputDecoration(
                 labelText: "Correo",
+                prefixIcon: Icon(Icons.email),
               ),
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) return "Ingrese su correo";
+                if (!value.contains('@')) return "Correo no válido";
+                return null;
+              },
             ),
             const SizedBox(height: 20),
-            TextField(
+            TextFormField(
               controller: passController,
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: "Contraseña",
+                prefixIcon: Icon(Icons.lock),
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) return "Ingrese su contraseña";
+                if (value.length < 4) return "Mínimo 4 caracteres";
+                return null;
+              },
             ),
             const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                print("Correo: ${correoController.text}");
-                print("Pass: ${passController.text}");
-              },
-              child: const Text("Ingresar"),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _login,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepOrange,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                ),
+                child: _loading
+                    ? const CircularProgressIndicator(
+                        color: Colors.white,
+                      )
+                    : const Text(
+                        "Ingresar",
+                        style: TextStyle(fontSize: 18),
+                      ),
+              ),
             ),
           ],
         ),
