@@ -13,133 +13,10 @@ class ApiService {
   static final _storage = FlutterSecureStorage();
 
   // ===========================
-  // 📤 CREAR DENUNCIA (PROTEGIDO)
+  // 🔑 OBTENER JWT
   // ===========================
-  static Future<bool> crearDenuncia(
-    String correo,
-    String descripcion,
-    String ubicacion,
-    File imagen,
-  ) async {
-    try {
-      final bytes = await imagen.readAsBytes();
-      final img64 = base64Encode(bytes);
-      final token = await _storage.read(key: 'jwt');
-
-      if (token == null) return false;
-
-      final body = jsonEncode({
-        "correo": correo,
-        "descripcion": descripcion,
-        "ubicacion": ubicacion,
-        "foto": img64,
-      });
-
-      final res = await http.post(
-        Uri.parse('$baseUrl/api/denuncias'),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: body,
-      );
-
-      print('📡 [POST DENUNCIA] ${res.statusCode}: ${res.body}');
-      return res.statusCode == 201;
-    } catch (e) {
-      print('❌ Error en crearDenuncia: $e');
-      return false;
-    }
-  }
-
-  // ===========================
-  // 📋 LISTAR DENUNCIAS (PROTEGIDO)
-  // ===========================
-  static Future<List<Denuncia>> getDenuncias() async {
-    try {
-      final token = await _storage.read(key: 'jwt');
-      if (token == null) return [];
-
-      final res = await http.get(
-        Uri.parse('$baseUrl/api/denuncias'),
-        headers: {"Authorization": "Bearer $token"},
-      );
-
-      if (res.statusCode == 200) {
-        final List data = jsonDecode(res.body);
-        return data.map((e) => Denuncia.fromJson(e)).toList();
-      } else {
-        print('⚠️ Error al cargar denuncias: ${res.statusCode}');
-        return [];
-      }
-    } catch (e) {
-      print('❌ Error en getDenuncias: $e');
-      return [];
-    }
-  }
-
-  // ===========================
-  // 👤 CREAR USUARIO
-  // ===========================
-  static Future<bool> crearUsuario(
-    String correo,
-    String password,
-  ) async {
-    try {
-      final body = jsonEncode({
-        "correo": correo,
-        "password": password,
-      });
-
-      final res = await http.post(
-        Uri.parse('$baseUrl/api/crear_user'),
-        headers: {"Content-Type": "application/json"},
-        body: body,
-      );
-
-      print("📡 [POST CREAR USER] ${res.statusCode}: ${res.body}");
-      return res.statusCode == 201;
-    } catch (e) {
-      print("❌ Error en crearUsuario: $e");
-      return false;
-    }
-  }
-
-  // ===========================
-  // 🔐 LOGIN USUARIO (GUARDA JWT)
-  // ===========================
-  static Future<bool> loginUsuario(
-    String correo,
-    String password,
-  ) async {
-    try {
-      final body = jsonEncode({
-        "correo": correo,
-        "password": password,
-      });
-
-      final res = await http.post(
-        Uri.parse('$baseUrl/api/login_user'),
-        headers: {"Content-Type": "application/json"},
-        body: body,
-      );
-
-      print("📡 [POST LOGIN USER] ${res.statusCode}: ${res.body}");
-
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final token = data['token'];
-        if (token != null) {
-          await _storage.write(key: 'jwt', value: token);
-          return true;
-        }
-      }
-
-      return false;
-    } catch (e) {
-      print("❌ Error en loginUsuario: $e");
-      return false;
-    }
+  static Future<String?> getToken() async {
+    return await _storage.read(key: 'jwt');
   }
 
   // ===========================
@@ -150,9 +27,127 @@ class ApiService {
   }
 
   // ===========================
-  // 🔑 OBTENER JWT
+  // 🔒 PETICIÓN GET PROTEGIDA
   // ===========================
-  static Future<String?> getToken() async {
-    return await _storage.read(key: 'jwt');
+  static Future<http.Response?> _getProtected(String endpoint) async {
+    try {
+      final token = await getToken();
+      if (token == null) return null;
+
+      return await http.get(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: {"Authorization": "Bearer $token"},
+      );
+    } catch (e) {
+      print('❌ Error en GET $endpoint: $e');
+      return null;
+    }
+  }
+
+  // ===========================
+  // 🔒 PETICIÓN POST PROTEGIDA
+  // ===========================
+  static Future<http.Response?> _postProtected(
+      String endpoint, Map<String, dynamic> body) async {
+    try {
+      final token = await getToken();
+      if (token == null) return null;
+
+      return await http.post(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(body),
+      );
+    } catch (e) {
+      print('❌ Error en POST $endpoint: $e');
+      return null;
+    }
+  }
+
+  // ===========================
+  // 📋 LISTAR DENUNCIAS
+  // ===========================
+  static Future<List<Denuncia>> getDenuncias() async {
+    final res = await _getProtected('/api/denuncias');
+    if (res != null && res.statusCode == 200) {
+      final List data = jsonDecode(res.body);
+      return data.map((e) => Denuncia.fromJson(e)).toList();
+    }
+    return [];
+  }
+
+  // ===========================
+  // 📤 CREAR DENUNCIA
+  // ===========================
+  static Future<bool> crearDenuncia(
+      String correo, String descripcion, String ubicacion, File imagen) async {
+    try {
+      final bytes = await imagen.readAsBytes();
+      final img64 = base64Encode(bytes);
+
+      final body = {
+        "correo": correo,
+        "descripcion": descripcion,
+        "ubicacion": ubicacion,
+        "foto": img64,
+      };
+
+      final res = await _postProtected('/api/denuncias', body);
+      return res != null && res.statusCode == 201;
+    } catch (e) {
+      print('❌ Error en crearDenuncia: $e');
+      return false;
+    }
+  }
+
+  // ===========================
+  // 👤 CREAR USUARIO
+  // ===========================
+  static Future<bool> crearUsuario(String correo, String password) async {
+    try {
+      final body = {"correo": correo, "password": password};
+
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/crear_user'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      return res.statusCode == 201;
+    } catch (e) {
+      print('❌ Error en crearUsuario: $e');
+      return false;
+    }
+  }
+
+  // ===========================
+  // 🔐 LOGIN USUARIO (GUARDA JWT)
+  // ===========================
+  static Future<bool> loginUsuario(String correo, String password) async {
+    try {
+      final body = {"correo": correo, "password": password};
+
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/login_user'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final token = data['token'];
+        if (token != null) {
+          await _storage.write(key: 'jwt', value: token);
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      print('❌ Error en loginUsuario: $e');
+      return false;
+    }
   }
 }
