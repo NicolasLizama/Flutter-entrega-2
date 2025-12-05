@@ -1,5 +1,5 @@
 # Proyecto DUOC – App de Denuncias (Flutter + Flask)
-# Link usando la app https://www.youtube.com/watch?v=-7dS1U3P5E8
+
 ## Estructura del repositorio
 
 ```
@@ -28,69 +28,33 @@ python -m venv venv
 venv\Scripts\activate  # En Windows
 # o en Linux/Mac:
 # source venv/bin/activate
-```
-<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/1.PNG" width="600"> </p>
 
-```bash
 pip install -r requirements.txt
-```
-<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/2.PNG" width="1000"> </p>
-
-Ejecución del servidor Flask
-
-⚠️ IMPORTANTE:
-
-Puedes crear el entorno virtual (python -m venv venv) y hacer la instalación de dependencias desde Visual Studio Code o cualquier editor.
-PERO cuando vayas a ejecutar el servidor (python app.py) y Ngrok, debes hacerlo en ventanas CMD separadas, fuera de VS Code, ya que ambos procesos deben correr al mismo tiempo.
-
-
-
-1. Abrir una primera ventana CMD
-Navega hasta la carpeta del servidor y ejecuta:
-
-```bash
 python app.py
 ```
-El servidor Flask se iniciará en:
-```bash
-http://127.0.0.1:5000
-```
-No cierres esta ventana.
-<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/3.PNG" width="600"> </p>
 
+El servidor se iniciará en:
+http://127.0.0.1:5000
 
 ### Exposición pública con Ngrok
 
-Ngrok se utiliza para exponer el servidor Flask a internet y permitir que la aplicación Flutter se conecte desde cualquier lugar.
+Para permitir la conexión desde Flutter:
 
-⚠️ Importante:
-Para usar Ngrok debes crear una cuenta gratuita en https://ngrok.com/
-Una vez creada, descarga e instala Ngrok, y copia tu authtoken (clave de autenticación personal) desde tu panel de usuario.
-Luego ejecútalo una sola vez con:
-```bash
-ngrok config add-authtoken TU_AUTHTOKEN_AQUI
-```
-Esto guardará tu token en la configuración local y podrás usar Ngrok sin restricciones.
-
-## Abrir una segunda ventana CMD
-
-Navega hasta la carpeta del servidor y ejecuta:
 ```bash
 ngrok http 5000
 ```
-Ngrok generará una URL pública como:
-```bash
+
+Copia la URL generada (por ejemplo):
 https://abcd1234.ngrok-free.app
-```
-<p align="center"> <img src="https://raw.githubusercontent.com/CarlosNeiraDuoc/capturas/refs/heads/main/4.PNG" width="600"> </p>
 
-Copia esa dirección y reemplázala en el archivo:
+Y reemplázala en el archivo:
+`app-flutter/lib/services/api_service.dart`
 
-app-flutter/lib/services/api_service.dart
-```bash
+```dart
 static const String baseUrl = 'https://abcd1234.ngrok-free.app';
 ```
-## Aplicación Flutter
+--------------------------------------------------------------------
+### Aplicación Flutter
 
 #### Ejecución
 
