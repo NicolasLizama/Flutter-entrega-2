@@ -172,6 +172,7 @@ def crear_denuncia():
 
 # Listar denuncias
 @app.route('/api/denuncias', methods=['GET'])
+@jwt_required()
 def listar_denuncias():
     denuncias = Denuncia.query.order_by(Denuncia.id.desc()).all()
     return jsonify([d.to_dict() for d in denuncias])
