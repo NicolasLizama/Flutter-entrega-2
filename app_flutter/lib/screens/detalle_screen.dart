@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
 import '../models/denuncia.dart';
 
 class DetalleScreen extends StatelessWidget {
@@ -28,7 +27,7 @@ class DetalleScreen extends StatelessWidget {
                 child: Container(
                   width: double.infinity,
                   constraints: const BoxConstraints(
-                    maxHeight: 400, // Altura máxima visible sin recortar
+                    maxHeight: 400,
                   ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
@@ -38,12 +37,12 @@ class DetalleScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: InteractiveViewer(
                       clipBehavior: Clip.none,
-                      panEnabled: true, // permite mover si es grande
+                      panEnabled: true,
                       minScale: 0.8,
                       maxScale: 4.0,
                       child: Image.network(
-                        '${ApiService.baseUrl}/../uploads/${denuncia.foto}',
-                        fit: BoxFit.contain, // 👈 muestra la imagen completa
+                        "https://compossible-stephane-pesteringly.ngrok-free.dev/uploads/${denuncia.foto}",
+                        fit: BoxFit.contain,
                         width: double.infinity,
                         errorBuilder: (context, error, stackTrace) => Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -74,25 +73,17 @@ class DetalleScreen extends StatelessWidget {
                   Text('Sin imagen disponible'),
                 ],
               ),
+
             const SizedBox(height: 25),
 
-            // 📝 Descripción
             _campoTitulo(context, 'Descripción'),
-            Text(
-              denuncia.descripcion,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(denuncia.descripcion, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 15),
 
-            // 📧 Correo
             _campoTitulo(context, 'Correo'),
-            Text(
-              denuncia.correo,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(denuncia.correo, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 15),
 
-            // 📍 Ubicación
             _campoTitulo(context, 'Ubicación'),
             Text(
               denuncia.ubicacion.isNotEmpty
@@ -102,22 +93,15 @@ class DetalleScreen extends StatelessWidget {
             ),
             const SizedBox(height: 15),
 
-            // 📅 Fecha
             _campoTitulo(context, 'Fecha de registro'),
-            Text(
-              denuncia.fecha,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(denuncia.fecha, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 30),
-
-            // 🔙 Botón de regreso
           ],
         ),
       ),
     );
   }
 
-  // 📦 Título estilizado reutilizable
   Widget _campoTitulo(BuildContext context, String titulo) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),

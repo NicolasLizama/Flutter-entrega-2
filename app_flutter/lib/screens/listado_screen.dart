@@ -12,21 +12,20 @@ class ListadoScreen extends StatefulWidget {
 
 class ListadoScreenState extends State<ListadoScreen> {
   late Future<List<Denuncia>> _denuncias;
+  final ApiService api = ApiService();
 
   @override
   void initState() {
     super.initState();
-    _denuncias = ApiService.getDenuncias();
+    _denuncias = api.getDenuncias();
   }
 
-  // 🔄 Método público para refrescar desde main.dart
   void recargarDenuncias() {
     setState(() {
-      _denuncias = ApiService.getDenuncias();
+      _denuncias = api.getDenuncias();
     });
   }
 
-  // 🔁 Permite actualizar manualmente con "pull to refresh"
   Future<void> _refrescarManual() async {
     recargarDenuncias();
   }
@@ -35,12 +34,9 @@ class ListadoScreenState extends State<ListadoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text("Listado de Denuncias"),
-        backgroundColor: Colors.deepOrange,
-        foregroundColor: Colors.white,
-        elevation: 3,
-      ),
+      // ❌❌❌ IMPORTANTE: ESTE APPBAR SE ELIMINA
+      // appBar: AppBar(...)
+
       body: FutureBuilder<List<Denuncia>>(
         future: _denuncias,
         builder: (context, snapshot) {
@@ -48,25 +44,18 @@ class ListadoScreenState extends State<ListadoScreen> {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(
-              child: Text(
-                "❌ Error al cargar denuncias: ${snapshot.error}",
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.redAccent),
-              ),
+              child: Text("❌ Error: ${snapshot.error}"),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
-              child: Text(
-                "No hay denuncias registradas",
-                style: TextStyle(fontSize: 16),
-              ),
+              child: Text("No hay denuncias registradas"),
             );
           }
 
           final denuncias = snapshot.data!;
+
           return RefreshIndicator(
             onRefresh: _refrescarManual,
-            color: Colors.deepOrange,
             child: ListView.builder(
               padding: const EdgeInsets.all(8),
               itemCount: denuncias.length,
@@ -76,34 +65,24 @@ class ListadoScreenState extends State<ListadoScreen> {
                 return Card(
                   elevation: 3,
                   margin:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
                   child: ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
-                        '${ApiService.baseUrl}/../uploads/${d.foto}',
+                        "https://compossible-stephane-pesteringly.ngrok-free.dev/uploads/${d.foto}",
                         width: 60,
                         height: 60,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.image_not_supported, size: 40),
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.broken_image),
                       ),
                     ),
                     title: Text(
                       d.descripcion,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(
-                      "${d.correo}\n${d.ubicacion}",
-                      style:
-                          const TextStyle(fontSize: 13, color: Colors.black54),
-                    ),
+                    subtitle: Text("${d.correo}\n${d.ubicacion}"),
                     isThreeLine: true,
                     onTap: () {
                       Navigator.push(

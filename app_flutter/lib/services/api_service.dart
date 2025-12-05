@@ -1,52 +1,39 @@
-import 'dart:convert';
+// lib/services/api_service.dart
+
+import 'package:dio/dio.dart';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../models/denuncia.dart';
+import 'dio_client.dart';
 
 class ApiService {
-  // 🌐 URL base (sin /api al final)
-  static const String baseUrl =
-      'https://compossible-stephane-pesteringly.ngrok-free.dev';
+  final Dio _dio = DioClient.dio;
 
   // ===========================
   // 📤 CREAR NUEVA DENUNCIA
   // ===========================
-  static Future<bool> crearDenuncia(
+  Future<bool> crearDenuncia(
     String correo,
     String descripcion,
     String ubicacion,
     File imagen,
   ) async {
     try {
-      // 🖼️ Convertir imagen a Base64
       final bytes = await imagen.readAsBytes();
       final img64 = base64Encode(bytes);
 
-      // 📦 Crear JSON a enviar
-      final body = jsonEncode({
+      final data = {
         "correo": correo,
         "descripcion": descripcion,
         "ubicacion": ubicacion,
         "foto": img64,
-      });
+      };
 
-      // 🚀 Enviar solicitud POST
-      final res = await http.post(
-        Uri.parse('$baseUrl/api/denuncias'),
-        headers: {"Content-Type": "application/json"},
-        body: body,
-      );
+      final res = await _dio.post("/api/denuncias", data: data);
 
-      print('📡 [POST] ${res.statusCode}: ${res.body}');
-      if (res.statusCode == 201) {
-        print('✅ Denuncia enviada con éxito');
-        return true;
-      } else {
-        print('⚠️ Error al enviar denuncia: ${res.body}');
-        return false;
-      }
+      return res.statusCode == 201;
     } catch (e) {
-      print('❌ Error en crearDenuncia: $e');
+      print("❌ Error en crearDenuncia: $e");
       return false;
     }
   }
@@ -54,19 +41,13 @@ class ApiService {
   // ===========================
   // 📋 OBTENER TODAS LAS DENUNCIAS
   // ===========================
-  static Future<List<Denuncia>> getDenuncias() async {
+  Future<List<Denuncia>> getDenuncias() async {
     try {
-      final res = await http.get(Uri.parse('$baseUrl/api/denuncias'));
-
-      if (res.statusCode == 200) {
-        final List data = jsonDecode(res.body);
-        return data.map((e) => Denuncia.fromJson(e)).toList();
-      } else {
-        print('⚠️ Error al cargar denuncias: ${res.statusCode}');
-        return [];
-      }
+      final res = await _dio.get("/api/denuncias");
+      final List lista = res.data;
+      return lista.map((e) => Denuncia.fromJson(e)).toList();
     } catch (e) {
-      print('❌ Error en getDenuncias: $e');
+      print("❌ Error en getDenuncias: $e");
       return [];
     }
   }
