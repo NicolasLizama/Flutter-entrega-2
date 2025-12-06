@@ -1,5 +1,8 @@
 # Proyecto DUOC – App de Denuncias (Flutter + Flask)
 
+## Video prueba de api flask postman
+https://www.youtube.com/watch?v=Gmg7OSqswuc
+
 ## Estructura del repositorio
 
 ```
